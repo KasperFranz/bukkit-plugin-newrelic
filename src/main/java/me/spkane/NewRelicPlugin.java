@@ -1,9 +1,5 @@
 package me.spkane;
 
-import net.gravitydevelopment.updater.Updater;
-import net.gravitydevelopment.updater.Updater.UpdateResult;
-import net.gravitydevelopment.updater.Updater.UpdateType;
-
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -40,12 +36,6 @@ public class NewRelicPlugin extends JavaPlugin {
 		saveConfig();
 		PluginManager pm = getServer().getPluginManager();
 		pm.addPermission(nrPermission);
-		if (this.getConfig().getBoolean("updates.apply") == true) {
-		    Updater updater = new Updater(this, 84649, this.getFile(), UpdateType.DEFAULT, this.getConfig().getBoolean("updates.progress"));
-		    if (updater.getResult() == UpdateResult.UPDATE_AVAILABLE) {
-		        this.getLogger().info("New Relic plugin update available! " + updater.getLatestName());
-		    }
-		}
 	}
 
 	@Override
@@ -77,25 +67,9 @@ public class NewRelicPlugin extends JavaPlugin {
 			return true;
 		} else if (cmd.getName().equalsIgnoreCase("nrcheck") && sender instanceof Player) {
 			Player player = (Player) sender;
-			if (player.hasPermission("newrelic.admin")) {
-	            Updater updater = new Updater(this, 84649, this.getFile(), UpdateType.NO_DOWNLOAD, this.getConfig().getBoolean("updates.progress"));
-			    if (updater.getResult() == UpdateResult.UPDATE_AVAILABLE) {
-	                player.sendMessage( ChatColor.GREEN + "New Relic plugin update available! " + updater.getLatestName());
-			    } else {
-	                player.sendMessage( ChatColor.RED + "There is no New Relic plugin update available.");
-			    }
-			}
 			return true;
 		} else if (cmd.getName().equalsIgnoreCase("nrupdate") && sender instanceof Player) {
 			Player player = (Player) sender;
-			if (player.hasPermission("newrelic.admin")) {
-			    Updater updater = new Updater(this, 84649, this.getFile(), UpdateType.DEFAULT, this.getConfig().getBoolean("updates.progress"));
-			    if (updater.getResult() == UpdateResult.UPDATE_AVAILABLE) {
-                    player.sendMessage( ChatColor.GREEN + "Downloading New Relic plugin update! " + updater.getLatestName());
-			    } else {
-                    player.sendMessage( ChatColor.RED + "There is no New Relic plugin update available.");
-			    }
-			}
 			return true;
 		}
 		return false;
