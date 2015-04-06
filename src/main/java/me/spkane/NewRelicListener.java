@@ -1,5 +1,6 @@
 package me.spkane;
 
+import com.google.common.base.Joiner;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -22,6 +23,13 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 
 import com.newrelic.api.agent.NewRelic;
 import com.newrelic.api.agent.Trace;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.bukkit.Chunk;
+import org.bukkit.World;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 public class NewRelicListener implements Listener {
 	
@@ -69,12 +77,16 @@ public class NewRelicListener implements Listener {
 			Entity entity = e.getEntity();
 		    String entityname = entity.getType().toString();
 		    NewRelic.addCustomParameter("entityType", entityname);
-		    if (e.getSpawnReason() != null) {
-		      String spawnreason = e.getSpawnReason().toString();
-		      NewRelic.addCustomParameter("spawnReason", spawnreason);
-		    } else {
-		    	NewRelic.addCustomParameter("spawnReason", "");
-		    }
+                    String spawnreason =  (e.getSpawnReason() != null) ? e.getSpawnReason().toString() : "";
+                    
+                    NewRelic.addCustomParameter("spawnReason", spawnreason);
+                    Chunk ChunkLocation = e.getEntity().getLocation().getChunk();
+                    NewRelic.addCustomParameter("position_X", e.getEntity().getLocation().getBlockX());
+                    NewRelic.addCustomParameter("position_Y", e.getEntity().getLocation().getBlockY());
+                    NewRelic.addCustomParameter("position_Z", e.getEntity().getLocation().getBlockZ());
+                    NewRelic.addCustomParameter("chunk_X",  ChunkLocation.getX());
+                    NewRelic.addCustomParameter("chunk_Z", ChunkLocation.getZ());
+                    NewRelic.addCustomParameter("world", ChunkLocation.getWorld().getName());
 		} else {
 			NewRelic.ignoreTransaction();
 		}
@@ -189,11 +201,17 @@ public class NewRelicListener implements Listener {
 	public void onBlockPlace(BlockPlaceEvent e) {
 		if (configGetter.getConfig().getBoolean("enabled") == true && 
 				configGetter.getConfig().getBoolean("track.block.place") == true ) {
-			NewRelic.setTransactionName(null, "BlockPlaceEvent");
-			Player player = e.getPlayer();
-			Block block = e.getBlock();
-			NewRelic.addCustomParameter("playerName", player.getName().toString());
-			NewRelic.addCustomParameter("blockType", block.getType().toString());
+                    NewRelic.setTransactionName(null, "BlockPlaceEvent");
+                    Player player = e.getPlayer();
+                    Block block = e.getBlock();
+                    NewRelic.addCustomParameter("playerName", player.getName());
+                    NewRelic.addCustomParameter("blockType", block.getType().toString());
+                    NewRelic.addCustomParameter("position_X", block.getX());
+                    NewRelic.addCustomParameter("position_Y", block.getY());
+                    NewRelic.addCustomParameter("position_Z", block.getZ());
+                    NewRelic.addCustomParameter("chunk_X", block.getChunk().getX());
+                    NewRelic.addCustomParameter("chunk_Z", block.getChunk().getZ());
+                    NewRelic.addCustomParameter("world", block.getWorld().getName());
 		} else {
 			NewRelic.ignoreTransaction();
 		}
@@ -204,11 +222,17 @@ public class NewRelicListener implements Listener {
 	public void onBlockBreak(BlockBreakEvent e) {
 		if (configGetter.getConfig().getBoolean("enabled") == true && 
 				configGetter.getConfig().getBoolean("track.block.break") == true ) {
-			NewRelic.setTransactionName(null, "BlockBreakEvent");
-			Player player = e.getPlayer();
-			Block block = e.getBlock();
-			NewRelic.addCustomParameter("playerName", player.getName().toString());
-			NewRelic.addCustomParameter("blockType", block.getType().toString());
+                    NewRelic.setTransactionName(null, "BlockBreakEvent");
+                    Player player = e.getPlayer();
+                    Block block = e.getBlock();
+                    NewRelic.addCustomParameter("playerName", player.getName());
+                    NewRelic.addCustomParameter("blockType", block.getType().toString());
+                    NewRelic.addCustomParameter("position_X", block.getX());
+                    NewRelic.addCustomParameter("position_Y", block.getY());
+                    NewRelic.addCustomParameter("position_Z", block.getZ());
+                    NewRelic.addCustomParameter("chunk_X", block.getChunk().getX());
+                    NewRelic.addCustomParameter("chunk_Z", block.getChunk().getZ());
+                    NewRelic.addCustomParameter("world", block.getWorld().getName());
 		} else {
 			NewRelic.ignoreTransaction();
 		}
@@ -217,28 +241,82 @@ public class NewRelicListener implements Listener {
 	@EventHandler
 	@Trace (dispatcher=true)
 	public void onRemoteServerCommand(RemoteServerCommandEvent  e) {
+            if (configGetter.getConfig().getBoolean("enabled") == true && 
+                configGetter.getConfig().getBoolean("track.server.remotecommand") == true ) {
+                NewRelic.setTransactionName(null, "RemoteCommandEvent");
+                NewRelic.addCustomParameter("playerName", e.getSender().toString());
+                NewRelic.addCustomParameter("command", e.getCommand());
+            } else {
+                    NewRelic.ignoreTransaction();
+            }
+	}
+        
+        @EventHandler
+	@Trace (dispatcher=true)
+	public void onPlayerPreprocessEvent(PlayerCommandPreprocessEvent  e) {
 		if (configGetter.getConfig().getBoolean("enabled") == true && 
-				configGetter.getConfig().getBoolean("track.server.remotecommand") == true ) {
-			NewRelic.setTransactionName(null, "RemoteCommandEvent");
-			NewRelic.addCustomParameter("commandSender", e.getSender().toString());
-			NewRelic.addCustomParameter("command", e.getCommand());
+                configGetter.getConfig().getBoolean("track.server.command") == true ) {
+                    String[] myList = e.getMessage().split(" ");
+                    String command = (String) myList[0].substring(1);
+                    int n=myList.length-1;
+                    String[] myList1=new String[n];
+                    System.arraycopy(myList,1,myList1,0,n);
+                    String params = Joiner.on(" ").join(myList1);
+                    NewRelic.setTransactionName(null, "CommandEvent");
+                    Chunk ChunkLocation = e.getPlayer().getWorld().getChunkAt(e.getPlayer().getLocation());
+                    NewRelic.addCustomParameter("playerName", e.getPlayer().getName());
+                    NewRelic.addCustomParameter("command", command);
+                    NewRelic.addCustomParameter("params", params);
+                    NewRelic.addCustomParameter("position_X", e.getPlayer().getLocation().getBlockX());
+                    NewRelic.addCustomParameter("position_Y", e.getPlayer().getLocation().getBlockY());
+                    NewRelic.addCustomParameter("position_Z", e.getPlayer().getLocation().getBlockZ());
+                    NewRelic.addCustomParameter("chunk_X",  ChunkLocation.getX());
+                    NewRelic.addCustomParameter("chunk_Z", ChunkLocation.getZ());
+                    NewRelic.addCustomParameter("world", ChunkLocation.getWorld().getName());
 		} else {
 			NewRelic.ignoreTransaction();
 		}
 	}
 
+
 	@EventHandler
 	@Trace (dispatcher=true)
 	public void onServerCommand(ServerCommandEvent  e) {
-		if (configGetter.getConfig().getBoolean("enabled") == true && 
-				configGetter.getConfig().getBoolean("track.server.command") == true ) {
-			NewRelic.setTransactionName(null, "CommandEvent");
-			NewRelic.addCustomParameter("commandSender", e.getSender().toString());
-			NewRelic.addCustomParameter("command", e.getCommand());
-		} else {
-			NewRelic.ignoreTransaction();
-		}
+            if (configGetter.getConfig().getBoolean("enabled") == true && 
+                            configGetter.getConfig().getBoolean("track.server.command") == true ) {
+                     String[] myList = e.getCommand().split(" ");
+                String command = (String) myList[0];
+                int n=myList.length-1;
+                String[] myList1=new String[n];
+                System.arraycopy(myList,1,myList1,0,n);
+                String params = Joiner.on(" ").join(myList1);
+                NewRelic.setTransactionName(null, "CommandEvent");
+                NewRelic.addCustomParameter("playerName", "console");
+                NewRelic.addCustomParameter("command", command);
+                NewRelic.addCustomParameter("params", params);
+            } else {
+                    NewRelic.ignoreTransaction();
+            }
 	}
+        @EventHandler
+        @Trace (dispatcher = true)
+        public void playerChat(AsyncPlayerChatEvent e){
+            if (configGetter.getConfig().getBoolean("enabled") == true && 
+                configGetter.getConfig().getBoolean("track.server.chat") == true ) {
+                Chunk ChunkLocation = e.getPlayer().getWorld().getChunkAt(e.getPlayer().getLocation());
+                NewRelic.setTransactionName(null, "chatEvent");
+                NewRelic.addCustomParameter("playerName", e.getPlayer().getName());
+                NewRelic.addCustomParameter("message", e.getMessage());
+                NewRelic.addCustomParameter("position_X", e.getPlayer().getLocation().getBlockX());
+                NewRelic.addCustomParameter("position_Y", e.getPlayer().getLocation().getBlockY());
+                NewRelic.addCustomParameter("position_Z", e.getPlayer().getLocation().getBlockZ());
+                NewRelic.addCustomParameter("chunk_X",  ChunkLocation.getX());
+                NewRelic.addCustomParameter("chunk_Z", ChunkLocation.getZ());
+                NewRelic.addCustomParameter("world", ChunkLocation.getWorld().getName());
+            } else {
+                NewRelic.ignoreTransaction();
+            }
+        }
 	
 	@EventHandler
 	@Trace (dispatcher=true)

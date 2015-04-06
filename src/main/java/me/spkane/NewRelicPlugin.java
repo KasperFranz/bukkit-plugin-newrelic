@@ -30,6 +30,7 @@ public class NewRelicPlugin extends JavaPlugin {
 		this.getConfig().addDefault("track.block.break", true);
 		this.getConfig().addDefault("track.server.command", true);
 		this.getConfig().addDefault("track.server.remotecommand", true);
+                this.getConfig().addDefault("track.server.chat", true);
 		this.getConfig().addDefault("track.chunk.load", true);
 		this.getConfig().addDefault("track.chunk.unload", true);
 		this.getConfig().options().copyDefaults(true);

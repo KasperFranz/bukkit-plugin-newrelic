@@ -4,7 +4,7 @@
     <artifactId>bukkit-plugin-newrelic</artifactId>
     <version>1.0</version>
     
-    <name>bukkit-plugin-newrelic</name>
+    <name>NewRelicPlugin</name>
    <properties>
             <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
    </properties>
