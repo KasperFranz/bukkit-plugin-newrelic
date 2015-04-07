@@ -25,9 +25,13 @@ import com.newrelic.api.agent.NewRelic;
 import com.newrelic.api.agent.Trace;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import org.bukkit.Chunk;
 import org.bukkit.World;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
@@ -298,18 +302,25 @@ public class NewRelicListener implements Listener {
                     NewRelic.ignoreTransaction();
             }
 	}
-        @EventHandler
+        @EventHandler(priority = EventPriority.HIGHEST,ignoreCancelled = false)
         @Trace (dispatcher = true)
-        public void playerChat(AsyncPlayerChatEvent e){
+        public void onPlayerChat(AsyncPlayerChatEvent e){
             if (configGetter.getConfig().getBoolean("enabled") == true && 
                 configGetter.getConfig().getBoolean("track.server.chat") == true ) {
                 Chunk ChunkLocation = e.getPlayer().getWorld().getChunkAt(e.getPlayer().getLocation());
                 NewRelic.setTransactionName(null, "chatEvent");
+                HashMap<String, String> position = new HashMap<String, String>();
+                position.put("x",Integer.toString(e.getPlayer().getLocation().getBlockX()));
+                position.put("y",Integer.toString(e.getPlayer().getLocation().getBlockY()));
+                position.put("z",Integer.toString(e.getPlayer().getLocation().getBlockZ()));
+                position.put("world",e.getPlayer().getLocation().getWorld().getName());
+                
                 NewRelic.addCustomParameter("playerName", e.getPlayer().getName());
                 NewRelic.addCustomParameter("message", e.getMessage());
-                NewRelic.addCustomParameter("position_X", e.getPlayer().getLocation().getBlockX());
-                NewRelic.addCustomParameter("position_Y", e.getPlayer().getLocation().getBlockY());
-                NewRelic.addCustomParameter("position_Z", e.getPlayer().getLocation().getBlockZ());
+                NewRelic.addCustomParameter("position", mapToString(position));
+                NewRelic.addCustomParameter("position_X", position.get("x"));
+                NewRelic.addCustomParameter("position_Y",  position.get("y"));
+                NewRelic.addCustomParameter("position_Z",  position.get("z"));
                 NewRelic.addCustomParameter("chunk_X",  ChunkLocation.getX());
                 NewRelic.addCustomParameter("chunk_Z", ChunkLocation.getZ());
                 NewRelic.addCustomParameter("world", ChunkLocation.getWorld().getName());
@@ -348,5 +359,22 @@ public class NewRelicListener implements Listener {
 			NewRelic.ignoreTransaction();
 		}
 	}
+        
+        
+        public String mapToString(HashMap<String,String> hashmap){
+            String returnString = "{";
+            Iterator<Map.Entry<String,String>> itr1 = hashmap.entrySet().iterator();
+            boolean first = true;
+            while(itr1.hasNext()) {
+                Map.Entry<String,String> entry = itr1.next();
+                String key = entry.getKey();
+                String value = entry.getValue();
+                if(!first){
+                    returnString += ", ";
+                }
+                returnString += key+":"+value;
+                first = false;
+            }
+        }
 	
 }
