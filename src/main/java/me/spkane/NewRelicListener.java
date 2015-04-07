@@ -375,6 +375,7 @@ public class NewRelicListener implements Listener {
                 returnString += key+":"+value;
                 first = false;
             }
+            return returnString+"}";
         }
 	
 }
