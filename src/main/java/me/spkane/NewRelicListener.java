@@ -23,14 +23,10 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 
 import com.newrelic.api.agent.NewRelic;
 import com.newrelic.api.agent.Trace;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import org.bukkit.Chunk;
-import org.bukkit.World;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -56,7 +52,7 @@ public class NewRelicListener implements Listener {
 		    	if (killer instanceof Player ) {
 		    		Player player = (Player) killer;
 		    		NewRelic.addCustomParameter("killedByPlayer", "true");
-		    		NewRelic.addCustomParameter("playerName", player.getName().toString());
+		    		NewRelic.addCustomParameter("playerName", player.getName());
 		    	} else {
 		    		NewRelic.addCustomParameter("killedByPlayer", "false");
 		    		NewRelic.addCustomParameter("playerName", "");
@@ -103,7 +99,7 @@ public class NewRelicListener implements Listener {
 				configGetter.getConfig().getBoolean("track.player.death") == true ) {
 			NewRelic.setTransactionName(null, "PlayerDeathEvent");
 			Player player = e.getEntity();
-			NewRelic.addCustomParameter("playerName", player.getName().toString());
+			NewRelic.addCustomParameter("playerName", player.getName());
 			NewRelic.addCustomParameter("playerDeathMessage", e.getDeathMessage());
 		} else {
 			NewRelic.ignoreTransaction();
@@ -117,7 +113,7 @@ public class NewRelicListener implements Listener {
 				configGetter.getConfig().getBoolean("track.player.join") == true ) {
 			NewRelic.setTransactionName(null, "PlayerJoinEvent");
 			Player player = e.getPlayer();
-			NewRelic.addCustomParameter("playerName", player.getName().toString());
+			NewRelic.addCustomParameter("playerName", player.getName());
 			if (player.hasPlayedBefore() == false) {
 				NewRelic.addCustomParameter("playerNew", "true");
 			} else {
@@ -135,7 +131,7 @@ public class NewRelicListener implements Listener {
 				configGetter.getConfig().getBoolean("track.player.kick") == true ) {
 			NewRelic.setTransactionName(null, "PlayerKickEvent");
 			Player player = e.getPlayer();
-			NewRelic.addCustomParameter("playerName", player.getName().toString());
+			NewRelic.addCustomParameter("playerName", player.getName());
 			if (e.getReason() != null) {
 			    NewRelic.addCustomParameter("playerKickReason", e.getReason());
 			} else {
@@ -153,7 +149,7 @@ public class NewRelicListener implements Listener {
 				configGetter.getConfig().getBoolean("track.player.quit") == true ) {
 			NewRelic.setTransactionName(null, "PlayerQuitEvent");
 			Player player = e.getPlayer();
-			NewRelic.addCustomParameter("playerName", player.getName().toString());
+			NewRelic.addCustomParameter("playerName", player.getName());
 		} else {
 			NewRelic.ignoreTransaction();
 		}
@@ -166,14 +162,10 @@ public class NewRelicListener implements Listener {
 				configGetter.getConfig().getBoolean("track.player.respawn") == true ) {
 			NewRelic.setTransactionName(null, "PlayerRespawnEvent");
 			Player player = e.getPlayer();
-			NewRelic.addCustomParameter("playerName", player.getName().toString());
+			NewRelic.addCustomParameter("playerName", player.getName());
 			NewRelic.addCustomParameter("playerRespawnLocation", e.getRespawnLocation().toString());
-			String bedspawn = "";
-			if (e.isBedSpawn() == true) {
-				bedspawn = "true";
-			} else {
-				bedspawn = "false";
-			}
+			String bedspawn = e.isBedSpawn() ? "true" : "false";
+                        
 			NewRelic.addCustomParameter("playerIsBedSpawn", bedspawn);
 		} else {
 			NewRelic.ignoreTransaction();
@@ -187,7 +179,7 @@ public class NewRelicListener implements Listener {
 				configGetter.getConfig().getBoolean("track.player.teleport") == true ) {
 			NewRelic.setTransactionName(null, "PlayerTeleportEvent");
 			Player player = e.getPlayer();
-			NewRelic.addCustomParameter("playerName", player.getName().toString());
+			NewRelic.addCustomParameter("playerName", player.getName());
 			if (e.getCause() != null) {
 			    NewRelic.addCustomParameter("playerTeleportCause", e.getCause().toString());
 			} else {
@@ -336,12 +328,7 @@ public class NewRelicListener implements Listener {
 				configGetter.getConfig().getBoolean("track.chunk.load") == true ) {
 			NewRelic.setTransactionName(null, "ChunkLoadEvent");
 			NewRelic.addCustomParameter("chunkName", e.getChunk().toString());
-			String newchunk = "";
-			if (e.isNewChunk() == true) {
-				newchunk = "true";
-			} else {
-				newchunk = "false";
-			}
+			String newchunk =  (e.isNewChunk() == true) ? "true" : "false";
 			NewRelic.addCustomParameter("chunkNew", newchunk);
 		} else {
 			NewRelic.ignoreTransaction();
